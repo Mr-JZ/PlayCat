@@ -14,11 +14,11 @@ This is a project to learn C++ and gain skills in openCV. In general we want a l
 - git
 - wget  
   for downloading model files
-- ffmpeg  
+- ffmpeg libavcodec-dev libavformat-dev libavutil-dev libswscale-dev libavresample-dev  
   if you want to stream the input video from somewhere
 
 list for copying:  
-git wget build-essential cmake libgtk2.0-dev pkg-config ffmpeg  
+git wget build-essential cmake libgtk2.0-dev pkg-config ffmpeg libavcodec-dev libavformat-dev libavutil-dev libswscale-dev libavresample-dev  
 (remember to install opencv from source!)
 
 ## Setup
