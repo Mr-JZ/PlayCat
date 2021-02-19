@@ -11,11 +11,18 @@ set(SOURCES
     src/main.cpp
     src/CatFinder.h
     src/CatFinder.cpp
+    src/MJPEGWriter/MJPEGWriter.h
+    src/MJPEGWriter/MJPEGWriter.cpp
+    src/LaserPointerFinder.h
+    src/LaserPointerFinder.cpp
 )
 
 add_executable(PlayCat ${SOURCES})
 
-target_link_libraries(PlayCat ${OpenCV_LIBS})
+target_link_libraries(PlayCat
+    ${OpenCV_LIBS}
+    pthread
+)
 
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})
 set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
