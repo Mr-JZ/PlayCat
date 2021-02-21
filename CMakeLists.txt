@@ -7,6 +7,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 find_package(OpenCV REQUIRED)
 include_directories(${OpenCV_INCLUDE_DIRS})
 
+add_definitions(-DBOOST_ERROR_CODE_HEADER_ONLY)
 find_package(Boost 1.67 REQUIRED)
 include_directories(${BOOST_INCLUDE_DIRS})
 
