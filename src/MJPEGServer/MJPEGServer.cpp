@@ -3,6 +3,7 @@
 MJPEGServer::MJPEGServer(int port) {
     this->port = port;
     running = false;
+    clientThreadsCount = 0;
 }
 
 MJPEGServer::~MJPEGServer() {
@@ -21,13 +22,18 @@ void MJPEGServer::start() {
 
 void MJPEGServer::stop() {
     if (running) {
+        // lock mutex to prevent server thread
+        // from spawning new client threads
         clientThreadsMutex.lock();
         shouldExit = true;
         clientThreadsMutex.unlock();
+
+        // cause (possibly) waiting encoder thread to exit
         {
             std::lock_guard<std::mutex> lock(currentFrameMutex);
             frameReady.notify_one();
         }
+        // cause (possibly) waiting client threads to exit
         {
             std::lock_guard<std::mutex> lock(frameEncodedMutex);
             frameEncoded.notify_all();
@@ -37,27 +43,35 @@ void MJPEGServer::stop() {
 
         // would need to be interrupted in accept()
         // serverThread.join();
+
+        // wait for all client threads to exit
+        {
+            std::unique_lock<std::mutex> lock(clientThreadsMutex);
+            while (clientThreadsCount > 0) {
+                clientThreadExited.wait(lock);
+            }
+        }
     }
 }
 
 void MJPEGServer::serve(cv::Mat* frame) {
-    currentFrameMutex.lock();
+    std::lock_guard<std::mutex> lock(currentFrameMutex);
     currentFrame = frame->clone();
-    currentFrameMutex.unlock();
     frameReady.notify_one();
 }
 
 void MJPEGServer::imageEncoder() {
     while (!shouldExit) {
-        // encode a frame
         std::vector<u_char> buf;
         {
+            // wait for a frame
             std::unique_lock<std::mutex> lock(currentFrameMutex);
             frameReady.wait(lock);
             if (shouldExit) {
                 break;
             }
 
+            // encode a frame
             std::vector<int> params;
             params.push_back(cv::IMWRITE_JPEG_QUALITY);
             params.push_back(80);
@@ -95,12 +109,15 @@ void MJPEGServer::server() {
                 socket->shutdown(tcp::socket::shutdown_send);
                 socket->close();
                 delete socket;
+                clientThreadsMutex.unlock();
                 break;
             }
             // start a thread to handle the connection
             std::thread thread([this, socket] { this->client(socket); });
             // detach it
             thread.detach();
+
+            clientThreadsCount++;
             clientThreadsMutex.unlock();
 
         } catch (const std::exception& e) {
@@ -176,7 +193,8 @@ void MJPEGServer::client(boost::asio::ip::tcp::socket* socket) {
             }
         }
     } catch (const std::exception& e) {
-        //std::cout << "exception in client handler: " << e.what() << std::endl;
+        // std::cout << "exception in client handler: " << e.what() <<
+        // std::endl;
     }
 
     try {
@@ -188,4 +206,11 @@ void MJPEGServer::client(boost::asio::ip::tcp::socket* socket) {
 
     socket->close();
     delete socket;
+
+    // signal that this client thread has exited
+    {
+        std::lock_guard<std::mutex> lock(clientThreadsMutex);
+        clientThreadsCount--;
+        clientThreadExited.notify_all();
+    }
 }

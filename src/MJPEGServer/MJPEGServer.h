@@ -49,6 +49,8 @@ class MJPEGServer {
     std::vector<u_char> encodedImageBuf;
 
     std::mutex clientThreadsMutex;
+    int clientThreadsCount;
+    std::condition_variable clientThreadExited;
 };
 
 #endif // MJPEG_SERVER_H
