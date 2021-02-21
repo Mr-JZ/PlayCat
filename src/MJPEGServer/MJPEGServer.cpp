@@ -49,6 +49,7 @@ void MJPEGServer::serve(cv::Mat* frame) {
 
 void MJPEGServer::imageEncoder() {
     while (!shouldExit) {
+        // encode a frame
         std::vector<u_char> buf;
         {
             std::unique_lock<std::mutex> lock(currentFrameMutex);
@@ -137,17 +138,18 @@ void MJPEGServer::client(boost::asio::ip::tcp::socket* socket) {
                 std::string contentType =
                     "Content-Type: image/jpeg\nContent-Length: ";
 
-                socket->write_some(
-                    boost::asio::buffer(
-                        "HTTP/1.1 200 OK\nAccess-Control-Allow-Origin: *\n"
-                        "Content-Type: multipart/x-mixed-replace; "
-                        "boundary=123456789000000000000987654321\n"
-                        "Server: PlayCat\n\n"),
-                    ec);
+                // write initial header
+                socket->write_some(boost::asio::buffer(
+                    "HTTP/1.1 200 OK\nAccess-Control-Allow-Origin: *\n"
+                    "Content-Type: multipart/x-mixed-replace; "
+                    "boundary=123456789000000000000987654321\n"
+                    "Server: PlayCat\n\n"));
 
-                socket->write_some(boost::asio::buffer(boundary), ec);
+                // write boundary to signal start of image
+                socket->write_some(boost::asio::buffer(boundary));
 
                 while (!shouldExit && socket->is_open()) {
+                    // get encoded image
                     std::string data;
                     int length;
                     {
@@ -160,23 +162,30 @@ void MJPEGServer::client(boost::asio::ip::tcp::socket* socket) {
                                            encodedImageBuf.end());
                         length = encodedImageBuf.size();
                     }
-                    socket->write_some(
-                        boost::asio::buffer(contentType +
-                                            std::to_string(length) + "\n\n"),
-                        ec);
+
+                    // write content header
+                    socket->write_some(boost::asio::buffer(
+                        contentType + std::to_string(length) + "\n\n"));
 
                     // write image data
-                    socket->write_some(boost::asio::buffer(data), ec);
+                    socket->write_some(boost::asio::buffer(data));
 
-                    socket->write_some(boost::asio::buffer(boundary), ec);
+                    // write boundary to seperate images
+                    socket->write_some(boost::asio::buffer(boundary));
                 }
             }
         }
     } catch (const std::exception& e) {
-        std::cout << "exception in client handler: " << e.what() << std::endl;
+        //std::cout << "exception in client handler: " << e.what() << std::endl;
     }
 
-    socket->shutdown(tcp::socket::shutdown_send);
+    try {
+        // will most likely throw an exception
+        // as the client has usually disconnected already
+        socket->shutdown(tcp::socket::shutdown_send);
+    } catch (std::exception& e) {
+    }
+
     socket->close();
     delete socket;
 }
