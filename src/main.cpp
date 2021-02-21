@@ -12,10 +12,10 @@
 #include "CatFinder.h"
 #include "LaserPointerFinder.h"
 
-#include "MJPEGWriter/MJPEGWriter.h"
-#ifdef MJPEG_WRITER_USABLE
-#define USE_MJPEG_WRITER
-#define MJPEG_WRITER_PORT 8080
+#define USE_MJPEG_SERVER
+#ifdef USE_MJPEG_SERVER
+#include "MJPEGServer/MJPEGServer.h"
+#define MJPEG_SERVER_PORT 8080
 #endif
 
 //#define NO_GUI
@@ -77,9 +77,9 @@ int main() {
 
 #endif
 
-#ifdef USE_MJPEG_WRITER
-    MJPEGWriter jpegWriter(MJPEG_WRITER_PORT);
-    jpegWriter.start();
+#ifdef USE_MJPEG_SERVER
+    MJPEGServer jpegServer(MJPEG_SERVER_PORT);
+    jpegServer.start();
 #endif
 
     LaserPointerFinder* laserPointerFinder = new LaserPointerFinder();
@@ -100,8 +100,8 @@ int main() {
             // object detection
             bool overlay = true;
             catFinder->processFrame(&frame, overlay);
-#ifdef USE_MJPEG_WRITER
-            jpegWriter.write(frame);
+#ifdef USE_MJPEG_SERVER
+            jpegServer.serve(&frame);
 #endif
 
             std::vector<CatBox>* cats = catFinder->getCats();
@@ -132,12 +132,12 @@ int main() {
         }
     }
 
-#ifdef USE_MJPEG_WRITER
-    jpegWriter.stop();
+#ifdef USE_MJPEG_SERVER
+    jpegServer.stop();
 #endif
 
     delete catFinder;
     delete laserPointerFinder;
 
-    return 0;
+    exit(0);
 }
