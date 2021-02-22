@@ -30,10 +30,6 @@ class MJPEGServer {
     std::atomic<bool> shouldExit{false};
 
     std::thread serverThread;
-    struct Client {
-        std::thread clientThread;
-    };
-    std::vector<Client> clients;
     void server();
 
     void client(boost::asio::ip::tcp::socket* socket);
