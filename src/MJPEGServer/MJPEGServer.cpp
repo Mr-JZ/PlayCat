@@ -22,6 +22,7 @@ void MJPEGServer::start() {
 
 void MJPEGServer::stop() {
     if (running) {
+        running = false;
         // lock mutex to prevent server thread
         // from spawning new client threads
         clientThreadsMutex.lock();
