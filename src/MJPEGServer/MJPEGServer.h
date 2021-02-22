@@ -28,9 +28,12 @@ class MJPEGServer {
 
     std::atomic<bool> running{false};
     std::atomic<bool> shouldExit{false};
+    std::atomic<bool> serverThreadRunning{false};
 
     std::thread serverThread;
     void server();
+    std::mutex serverThreadMutex;
+    std::condition_variable serverThreadExited;
 
     void client(boost::asio::ip::tcp::socket* socket);
 

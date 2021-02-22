@@ -16,7 +16,10 @@ void MJPEGServer::start() {
         shouldExit = false;
         imageEncoderThread = std::thread([this] { this->imageEncoder(); });
 
+        serverThreadMutex.lock();
+        serverThreadRunning = true;
         serverThread = std::thread([this] { this->server(); });
+        serverThreadMutex.unlock();
     }
 }
 
@@ -42,8 +45,34 @@ void MJPEGServer::stop() {
 
         imageEncoderThread.join();
 
-        // would need to be interrupted in accept()
-        // serverThread.join();
+        // wait for server thread to exit
+        {
+            std::unique_lock<std::mutex> lock(serverThreadMutex);
+            while (serverThreadRunning) {
+                // connect to the server as a client to
+                // make it check shouldExit and exit
+                {
+                    using tcp = boost::asio::ip::tcp;
+
+                    boost::asio::io_service ioService;
+                    tcp::socket socket(ioService);
+
+                    try {
+                        socket.connect(tcp::endpoint(
+                            boost::asio::ip::address::from_string("127.0.0.1"),
+                            port));
+                        socket.close();
+                    } catch (std::exception& e) {
+                        std::cout << e.what() << std::endl;
+                    }
+                }
+
+                // wait for the server thread to tell us that it is done
+                serverThreadExited.wait(lock);
+            }
+        }
+
+        serverThread.join();
 
         // wait for all client threads to exit
         {
@@ -92,7 +121,7 @@ void MJPEGServer::server() {
     namespace net = boost::asio;
     using tcp = boost::asio::ip::tcp;
 
-    boost::asio::io_context ioService{1};
+    boost::asio::io_service ioService;
     // acceptor receives incoming connections
     tcp::acceptor acceptor(ioService, tcp::endpoint(tcp::v4(), port));
 
@@ -125,6 +154,12 @@ void MJPEGServer::server() {
             std::cout << "exception in server thread: " << e.what()
                       << std::endl;
         }
+    }
+
+    {
+        std::lock_guard<std::mutex> lock(serverThreadMutex);
+        serverThreadRunning = false;
+        serverThreadExited.notify_all();
     }
 }
 
