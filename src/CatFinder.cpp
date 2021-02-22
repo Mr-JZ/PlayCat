@@ -56,7 +56,7 @@ void CatFinder::processFrame(cv::Mat* frame, bool overlay) {
         {
             bool swapRB = true;
             // preserve aspect ratio
-            int targetX = 320;
+            int targetX = 300;
             int targetY =
                 (int)((float)targetX / (float)frame->cols * (float)frame->rows);
             cv::dnn::blobFromImage(*frame, blob, 1.0, Size(targetX, targetY),

@@ -14,11 +14,13 @@ This is a project to learn C++ and gain skills in openCV. In general we want a l
 - git
 - wget  
   for downloading model files
-- ffmpeg  
+- ffmpeg libavcodec-dev libavformat-dev libavutil-dev libswscale-dev libavresample-dev  
   if you want to stream the input video from somewhere
+- libboost-all-dev
+  for the web server
 
 list for copying:  
-git wget build-essential cmake libgtk2.0-dev pkg-config ffmpeg  
+git wget build-essential cmake libgtk2.0-dev pkg-config ffmpeg libavcodec-dev libavformat-dev libavutil-dev libswscale-dev libavresample-dev libboost-all-dev  
 (remember to install opencv from source!)
 
 ## Setup
@@ -73,6 +75,7 @@ Then run it:
 You may need to resize the window.
 
 If you are using VSCode and the cmake extension, you need to initially open the cmake tab and click on "Configure all Projects" at the top.  
+Then select "Unsepcified" from the drop down.  
 After that you can press f7 to build and shitf + f5 to build and run.
 
 ## Code style
