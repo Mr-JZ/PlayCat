@@ -1,4 +1,4 @@
-# PlayCat Server
+# PlayCat
 
 This is a project to learn C++ and gain skills in openCV. In general we want a laser tower that plays with a cat.
 
