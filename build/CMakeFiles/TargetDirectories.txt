@@ -1,0 +1,3 @@
+/home/pi/PlayCat/build/CMakeFiles/rebuild_cache.dir
+/home/pi/PlayCat/build/CMakeFiles/PlayCat.dir
+/home/pi/PlayCat/build/CMakeFiles/edit_cache.dir
