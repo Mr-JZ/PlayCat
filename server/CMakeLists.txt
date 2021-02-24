@@ -19,6 +19,10 @@ set(SOURCES
     src/MJPEGServer/MJPEGServer.cpp
     src/LaserPointerFinder.h
     src/LaserPointerFinder.cpp
+    src/ServoControl/ServoControl.h
+    src/ServoControl/ServoControl.cpp
+    src/ServoControl/EnumSerial.h
+    src/ServoControl/EnumSerial.cpp
 )
 
 add_executable(PlayCat ${SOURCES})
