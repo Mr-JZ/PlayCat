@@ -8,9 +8,12 @@
 #include <iostream>
 #include <stdio.h>
 #include <string>
+#include <vector>
 
 #include "CatFinder.h"
 #include "LaserPointerFinder.h"
+#include "ServoControl/EnumSerial.h"
+#include "ServoControl/ServoControl.h"
 
 #define USE_MJPEG_SERVER
 #ifdef USE_MJPEG_SERVER
@@ -84,6 +87,24 @@ int main() {
 
     LaserPointerFinder* laserPointerFinder = new LaserPointerFinder();
 
+    // initialize servo control
+    ServoControl* servoControl;
+    {
+        EnumSerial enumSerial;
+        std::vector<std::string> connectedPorts = enumSerial.enumSerialPorts();
+        if (connectedPorts.size() == 0) {
+            std::cout << "failed to find connected serial port" << std::endl;
+            servoControl = new ServoControl();
+        } else {
+            std::string serialPortName = connectedPorts.at(0);
+            servoControl = new ServoControl(9600, serialPortName);
+            std::cout << "using arduino on port " << serialPortName
+                      << std::endl;
+        }
+    }
+
+    servoControl->setPos(90, 90);
+
     // keep running until a key is pressed
     // call to waitKey() is needed for the window to show up
     // and change it's contents
@@ -113,6 +134,16 @@ int main() {
                 */
             }
 
+            // replace with laser pointer target calculation stuff
+            if (cats->size() > 0) {
+                CatBox cat = cats->at(0);
+                int servoA = (int)((float)(cat.x + (cat.width / 2)) /
+                                   (float)frame.cols * 180.0);
+                int servoB = (int)((float)(cat.y + (cat.height / 2)) /
+                                   (float)frame.rows * 180.0);
+                servoControl->setPos(servoA, servoB);
+            }
+
             std::vector<LaserCircle>* lasers =
                 laserPointerFinder->getLaserPointers();
             for (size_t i = 0; i < lasers->size(); i++) {
@@ -138,6 +169,7 @@ int main() {
 
     delete catFinder;
     delete laserPointerFinder;
+    delete servoControl;
 
     exit(0);
 }
