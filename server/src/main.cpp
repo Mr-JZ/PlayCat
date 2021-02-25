@@ -32,6 +32,10 @@ using namespace cv;
 using namespace dnn;
 
 int main() {
+    // needed to be able to check if data is available in cin
+    // see https://stackoverflow.com/a/29262017
+    std::cin.sync_with_stdio(false);
+
     CatFinder* catFinder = new CatFinder();
 
     if (!catFinder->initialised()) {
@@ -108,7 +112,9 @@ int main() {
     // keep running until a key is pressed
     // call to waitKey() is needed for the window to show up
     // and change it's contents
-    while (waitKey(1) < 0) {
+    bool shouldQuit = false;
+    std::cout << "press q and hit enter to quit" << std::endl;
+    while (waitKey(1) < 0 && !shouldQuit) {
         // get a frame
         Mat frame;
         cap >> frame;
@@ -161,6 +167,16 @@ int main() {
             // write the frame to the video file
             // videoOut.write(frame);
         }
+
+        // check if user pressed q to quit
+        while(std::cin.rdbuf()->in_avail() > 0){
+            char c;
+            std::cin >> c;
+            if(c == 'q'){
+                shouldQuit = true;
+                break;
+            }
+        }
     }
 
 #ifdef USE_MJPEG_SERVER
@@ -171,5 +187,5 @@ int main() {
     delete laserPointerFinder;
     delete servoControl;
 
-    exit(0);
+    return 0;
 }
