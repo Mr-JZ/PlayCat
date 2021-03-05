@@ -33,38 +33,24 @@ rm opencv_contrib.zip
 
 # Create build directory and switch into it
 mkdir -p build && cd build
-if [ uname -m -eq "armv71"]
-then
-    # Configure - generate build scripts for arm
-    cmake -D CMAKE_BUILD_TYPE=RELEASE \
-        -D CMAKE_INSTALL_PREFIX=/usr/local \
-        -D OPENCV_EXTRA_MODULES_PATH=../opencv_contrib-master/modules \
-        -D ENABLE_NEON=ON \
-        -D ENABLE_VFPV3=ON \
-        -D BUILD_TESTS=OFF \
-        -D INSTALL_PYTHON_EXAMPLES=OFF \
-        -D OPENCV_ENABLE_NONFREE=ON \
-        -D CMAKE_SHARED_LINKER_FLAGS='-latomic' \
-        -D BUILD_EXAMPLES=OFF ../opencv-master
-else
-    # Configure - generate build scripts for everything else
-    cmake -D CMAKE_BUILD_TYPE=RELEASE \
-        -D CMAKE_INSTALL_PREFIX=/usr/local \
-        -D OPENCV_EXTRA_MODULES_PATH=../opencv_contrib-master/modules \
-        -D ENABLE_NEON=OFF \
-        -D ENABLE_VFPV3=OFF \
-        -D BUILD_TESTS=OFF \
-        -D INSTALL_PYTHON_EXAMPLES=OFF \
-        -D OPENCV_ENABLE_NONFREE=ON \
-        -D CMAKE_SHARED_LINKER_FLAGS='-latomic' \
-        -D BUILD_EXAMPLES=OFF ../opencv-master
-fi
+
+# Configure - generate build scripts for the preferred build system
+cmake -D CMAKE_BUILD_TYPE=RELEASE \
+    -D CMAKE_INSTALL_PREFIX=/usr/local \
+    -D OPENCV_EXTRA_MODULES_PATH=../opencv_contrib-master/modules \
+    -D ENABLE_NEON=ON \
+    -D ENABLE_VFPV3=ON \
+    -D BUILD_TESTS=OFF \
+    -D INSTALL_PYTHON_EXAMPLES=OFF \
+    -D OPENCV_ENABLE_NONFREE=ON \
+    -D CMAKE_SHARED_LINKER_FLAGS='-latomic' \
+    -D BUILD_EXAMPLES=OFF ../opencv-master
 
 
 # check the memorie
 phymem=$(free|awk '/^Mem:/{print $2}')
 
-if [ 1000000 -gt phymem ]
+if [ 1000000 -gt phymem]
 then
     # change the swap to be able to process the compiler
     sudo sed -i -r 's/^CONF_SWAPSIZE=[0-9]+/CONF_SWAPSIZE=1024/' /etc/dphys-swapfile
@@ -79,7 +65,7 @@ make -j4
 sudo make install
 sudo ldconfig
 
-if [ 1000000 -gt phymem ]
+if [ 1000000 -gt phymem]
 then
     # change the swap to be able to process the compiler
     sudo sed -i -r 's/^CONF_SWAPSIZE=[0-9]+/CONF_SWAPSIZE=1024/' /etc/dphys-swapfile
