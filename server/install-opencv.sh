@@ -79,6 +79,8 @@ make -j4
 sudo make install
 sudo ldconfig
 
+phymem=$(free|awk '/^Mem:/{print $2}')
+
 if [ 1000000 -gt phymem ]
 then
     # change the swap to be able to process the compiler
